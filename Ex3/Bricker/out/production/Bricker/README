@@ -1,0 +1,172 @@
+shirlevy
+316419423
+
+File description:
+The file contains the Bricker game.
+
+Design:
+brick_strategies Structure:
+    interface CollisionStrategy
+    class removeBrick implements CollisionStrategy
+    classes inheriting from removeBrick: extraBalls, extraPaddle, camChange, lifeReturn, doubleBehaviour
+    BrickStrategyFactory - factory for all available strategies
+    Enum Strategies - used by BrickStrategyFactory in order to give meaning to the random choices.
+
+   * I briefly explain why I have made the various design choices, and which others you have considered in the
+    ANSWER to Q2.
+
+gameobjects Structure:
+    classes inheriting from GameObject: Ball, Brick, Paddle, Heart, GraphicLifeCounter, NumericLifeCounter
+    classes inheriting from Paddle: extraPaddle
+
+    I followed the code API at the ex 3.1 for classes: Ball, Brick, Paddle, GraphicLifeCounter,
+    NumericLifeCounter.
+    In this exercise, I added the class: extraPaddle, Heart.
+        extraPaddle: the class inherits from Paddle in order to use same functions and not repeat code.
+    The difference is that extraPaddle also has a counter of hits it's allowed to get, and when this counter
+    hits 0 - the extraPaddle is removed from the game. all documented in the class.
+        Heart: the class inherits from GameObject in order to use it's functions. It represents the falling
+        heart when a brick with this LifeReturn is removed.
+
+For further explanation - The code is VERY documented.
+
+
+Implementation issues:
+gameobjects:
+Ball - adding public func setRandomVelocity() - in order to set random velocity for main ball and puck balls
+without repeating code
+Paddle - all according to API
+ExtraPaddle - inherits from Paddle.
+    Holds as well: counter for collisions allowed in the extraPaddle before it's removed, gameObjectCollection
+    in order to remove it from the game.
+    onCollisionEnter - uses Paddle's onCollisionEnter (from super), and then decrements the counter of
+    collisions allowed.
+    update - uses Paddle's update, and then removes the extraPaddle if no more collisions are allowed.
+Brick - all according to API
+GraphicLifeCounter - adding private func incrementLife() - handles with incrementation of lifeCounter: adds
+life to numOfLives, and as well one more graphic heart to the board. update func changed to handle also
+incrementation.
+NumericLifeCounter - update func changed to handle also incrementation. other than that, all according to API
+Heart - all according to instructions.
+
+brick_strategies:
+interface CollisionStrategy - changed to interface containing methods: onCollision, getGameObjectCollection()
+all it's implementations needs to have.
+removeBrick - 5 classes inherits from it. Removes brick from game object collection on collision.
+extraBalls - inherits from removeBrick. Add puck ball to game on collision according to held CollisionStrategy
+    NOTICE! the func onCollision is made for adding 1 ball - but you can also uncomment the part for 3 balls
+    if wanted. BY THE RECOMMENDATION IN THE FORUM - I used only one ball and not 3, because otherwise the game
+    ends too fast. THE COMMENTED CODE IS ONLY IF YOU WANT TO CHANGE IT - NOT GARBITCH!!!
+extraPaddle - inherits from removeBrick. Creates ExtraPaddle in the game, 1 at a time!
+    static var: boolean isOn can be changed from other classes as well.
+    static func: setFalseIsOn(), used in other classes of the game - setting isOn to false when loosing or
+    when it is removed from the game - in order to be able to create another one.
+    I chose to make it static in order to be able to reach it even when the reason is not related to the same
+    class.
+camChange - inherits from removeBrick. changes the camera's state on collision.
+    static funcs:
+        decrementHitsCounter() - used by Ball class. whenever the ball collides, it decrements the counter of
+        hits.
+        getHisCount() - returns the number of hits left to get to normal state of camera.
+        I chose to make it static in order to be able to reach it even when the reason is not related to the
+        same class.
+lifeReturn - inherits from removeBrick. on collision: drops a heart to be collected by Paddle, and return life
+. Drops an image of Heart from removed brick.
+doubleBehaviour - holds a list of CollisionStrategy to be followed.
+    onCollision - the main idea is to first implement the basic behaviour, removing the brick and
+    decrementing the brickCounter. Then, in order to implement also all other strategies the brick holds, but
+    without decrementing too much of brickCounter: I active the onCollision func of each strategy, with the
+    only difference: I send it with a new Counter, and not the brickCounter. This way, the strategy's
+    functionality is not harmed - but the brickCounter is decremented only one time.
+    As the instructions order: the brick is removed, and all strategies of the brick are implemented at once.
+
+Strategies - Enum
+    BASIC=0, EXTRA_BALLS=1, EXTRA_PADDLE=2, CHANGE_CAMERA=3, EXTRA_LIFE=4, DOUBLE=5
+
+BrickStrategyFactory -
+    getStrategy() - method randomly selects between 5 strategies and returns one CollisionStrategy object
+    which is a RemoveBrick extended. The func chooses a strategy from Strategies randomly, creates and returns
+    it. doubleBehaviour requires an additional function to choose the strategies involved.
+    handleDoubleStrategy() - method randomly selects between 5 strategies and returns a list of
+    CollisionStrategy objects according to instructions. NOTICE! all this method is built exactly how it is
+    written in the forum - i followed the exact steps in the forum. All the func structure is described in Q3.
+    First I create a list of all Strategies I should create to the brick, and only then I go over the list and
+    create the CollisionStrategy themselves by "mini factory" for only the needed strategies.
+    addTwoWithoutDouble - updates the list of Strategies objects: adds 2 more behaviours (as described in the
+    forum) and returns it. the purpose of this method is only to not repeat the code in func
+    handleDoubleStrategy() whenever the first\second behaviour is double again.
+
+BrickerGameManager - all according to API
+    functions: createBorders(), createBall(), createPaddle(), addBackground(), createBricks(), createLives()
+    are implemented outside of the initializeGame scope - to keep order in code and create good גivision of
+    responsibilities between all object creations. All are used in initializeGame.
+    isWin() - searches for current winning condition and returns true if found
+    checkForGameEnd() - checks for ending game condition: win/lose condition. When found, continues as
+    the user decides.
+    updateCam() - sets the camera back to normal when there are no more hits (counter value =0) to get it
+    removed.
+
+
+ANSWERS:
+
+Q1.
+Planning the behaviours:
+Structure:
+interface CollisionStrategy
+class removeBrick implements CollisionStrategy
+classes inheriting from removeBrick: extraBalls, extraPaddle, camChange, lifeReturn, doubleBehaviour
+BrickStrategyFactory - factory for all available strategies
+Enum Strategies - used by BrickStrategyFactory in order to give meaning to the random choices.
+
+I followed the DanoGameLab planning, but as well added some changes that I feel were necessary.
+
+Q2.
+I turned CollisionStrategy into interface, and created the class removeBrick that implements the basic
+behaviour for all bricks - removing the brick image and decrement it's counter. this way I wanted to make sure
+all of the bricks are following the basic behaviour first. Then, I decided that all other behaviours inherit
+from removeBrick, and this way they all would have basic
+functions and the option to override them whenever needed. It was easier than having many implementations for
+the CollisionStrategy, because many behaviours could use the super function, and so I didn't get double code.
+
+Using this CollisionStrategy as interface requires some functions, and removeBrick implements all of them in
+order to fit the Basic strategy. This way, when all classes inherit from it - we should change only whatever
+is needed, and for the rest we are able to just use it's super function.
+
+Q3.
+In order to limit doubleBehaviour to only 3 I created the function handleDoubleStrategy that FOLLOWS EXACTLY
+WHAT'S WRITTEN IN THE FORUM. it works as follows:
+
+    At BrickStrategyFactory, getStrategy:
+    if the random strategy fits fits any behaviour but the doubleBehaviour: we create it and we're done.
+    else:
+    1. we create a list strategies of the enum values of strategies. to fill it we use the function
+        handleDoubleStrategy.
+    2. if first behaviour chosen is DOUBLE: it means 3 behaviours should be chosen:
+        behaviour1.1: one of: extraBalls, extraPaddle, camChange, lifeReturn
+        (then, by using the function "addTwoWithoutDouble" - created to not repeat code)
+            behaviour1.2: one of: extraBalls, extraPaddle, camChange, lifeReturn, basic
+            behaviour2: one of: extraBalls, extraPaddle, camChange, lifeReturn, basic
+            we add all behaviours: 1.1, 1.2, 2 to the list
+        else:
+            behaviour1 is not double, and so one of: extraBalls, extraPaddle, camChange, lifeReturn, basic
+            if second behaviour chosen is DOUBLE: it means 3 behaviours should be chosen:
+                (then, by using the function "addTwoWithoutDouble" - created to not repeat code)
+                behaviour2.1: one of: extraBalls, extraPaddle, camChange, lifeReturn, basic
+                behaviour2.2: one of: extraBalls, extraPaddle, camChange, lifeReturn, basic
+                we add all behaviours: 1, 2.1, 2.2 to the list
+            else:
+                only 2 behaviours were chosen from: extraBalls, extraPaddle, camChange, lifeReturn, basic
+                we add all behaviours: 1, 2 to the list
+
+    Then, we go over all behaviours in the list and create the strategies they represent, add them all to a
+    list of CollisionStrategy and returns it.
+    The CollisionStrategy list is used by the class doubleBehaviour and this way all behaviours are
+    implemented - because we follow the list.
+
+Q4.
+In order to make a brick capable of holding more than one strategy, I created a list of CollisionStrategies
+that every brick with the strategy doubleBehaviour holds. This way - if we would like to change the game so a
+brick could hold more than 3 behaviours, we could just add more behaviours to the list, and not much further
+change is needed (and only in the functions: handleDoubleStrategy, addTwoWithoutDouble). The implementation
+of the doubleBehaviour class shouldn't change. It enables us to expend the number of behaviours changing only
+specific functions in class BrickStrategyFactory.
