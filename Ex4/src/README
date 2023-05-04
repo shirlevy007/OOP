@@ -1,0 +1,160 @@
+shirlevy
+316419423
+
+
+=============================
+=      File description     =
+=============================
+
+image:
+    Image - creates var from type Image
+    FileImage - creates var from type FileImage
+ascii_art:
+    Driver.java - The file contains an ASCII art maker.
+    Shell - class that runs the program, gets commands from user and implements
+    img_to_char:
+        BrightnessImgCharMatcher - class uses Image to create the ASCII art
+
+
+
+=============================
+=          Design           =
+=============================
+
+I followed all API as described
+image:
+    Image - interface, as in instructions.
+    FileImage - implements Image, as in instructions.
+ascii_art:
+    Shell - class that runs the program, gets commands from user and implements
+    img_to_char:
+        BrightnessImgCharMatcher - class uses Image to create the ASCII art
+
+
+=============================
+=  Implementation details   =
+=============================
+
+In BrightnessImgCharMatcher,
+in order to make it more efficient i used following:
+    HashMap<int[], Double> brightnessOfSubsMap - I saved a Map of all the sub images’ coordinates as keys and
+their brightness values as values. This way, if resolution hasn't changed, sub images stays the same,
+and so no need to convert sub images to brightness value, but only to find most proper char.
+This way I make sure that exactly the same topLeft (same coordinates) gets its' brightness value.
+
+    TreeMap<Double, Character> brightnessCharMap - I chose to save all chars and values in TreeMap and use the
+fact that It's sorted. this way, I could easily find for a brightness value a char with closest brightness
+value. I use TreeMap functions and the fact it's sorted for better efficiency.
+
+I decided it was better use than inner classes or anonymous classes of sub images. Also I believe it made it
+much more efficient use a collection from type Map. HashMap for subImages and TreeMap for chars. I use the
+good runtime (O(1) on average case for insert\remove in HashMap, for example) in order to improve my runtime.
+
+
+In Shell,
+    Set<Character> charSet - I created it as a set in order to add and remove with no duplicates and at most
+efficient time.
+    int startInt, int endInt - I saved both vars in order to avoid code-duplicate when adding\removing
+sequence of chars.
+    boolean isConsole - whenever a console command is applied, isConsole is lighted as true and never changes
+back to false. This way I make sure It follows the instructions.
+    run - I used switch case in order to apply the users' command. Also, I divided run() to many different
+functions so every command has short function outside of run(). This way I avoid long function and divide all
+responsibilities between all function.
+
+I decided it was a
+
+=============================
+=    Answers to questions   =
+=============================
+
+The algorithm:
+Stage A – padding:
+FileImage:
+nextPower2 – finds the closest (higher) power of 2 of origin height\width at O(1)
+
+FileImage – creates an array of pixels representing the padded image using the function nextPower2,
+all at O(height*width). Every array getting to index and filling it O(1)
+
+Stage B – convert to sub images:
+Image:
+subPicsTopLeft – returns a list of topLeft – coordinates to top left corners to each sub pic as int[].
+At worst case: O((height*width)/2)= O(height*width)
+
+Stage C – determine brightness value of ASCII chars:
+BrightnessImgCharMatcher:
+createBrightnessCharMap – gets a set of chars from user to be ordered in the map.
+NOTICE: charSet holds at max case 95 chars.
+Per char:
+    normalizedByResolution - O(resolution)~O(1)
+    normalized - O(resolution)~O(1)
+So, all in all, creating brightnessCharMap is at fixed runtime ~ O(95)* O(resolution)~O(1)
+
+Stage D – convert all sub images to the char closest in brightness:
+BrightnessImgCharMatcher:
+createBrightnessCharMap –
+for every subImage, O(height*width):
+	convertSubPic – to brightness value: O(getPixel)=O(1)
+notice – convertSubPic per subImage = O(height*width) at total (every pixel is called once)
+	closestValInMap – at most 95 chars at map, and so O(95)=O(1)
+all in all O(height*width).
+
+At second run (with same resolution): no need to convert. So only:
+for every subImage, O(height*width) at worst case:
+	closestValInMap – at most 95 chars at map, and so O(95)=O(1)
+all in all O(height*width).
+
+So all in all runtime: O(height*width)+ O(height*width)+O(1)+ O(height*width) = O(height*width)
+
+Efficiency – I saved a Map of all the sub images’ coordinates as keys and their brightness values as values.
+This way, if resolution hasn't changed, sub images stays the same,
+and so no need to convert sub images to brightness value, but only to proper char.
+At best case: O(1) * O(95) chars = O(1) * O(1) = O(1)
+At worst case, we’ll have O(height*width) sub images * O(95) chars = O(height*width) * O(1) = O(height*width)
+
+--------------------------------------------------------------------------------------------------------
+
+API explanations:
+Stage A-
+FileImage:
+    nextPower2 - returns closest power of 2 (higher) to origin height\width
+    FileImage - constructor: creates pixelArray for the image after padding.
+
+Stage B-
+Image:
+    subPicsTopLeft - returns list of topLeft - coordinates to top left corners to each sub pic.
+    I chose to return an ArrayList of int[] representing the topLeft corner of the subImage.
+    This way I use at most O(2)*O(height*width)=O(height*width) space at worst case.
+    Also - I keep only O(height*width) of primitive var and not an Image var representing the sub image.
+    It was the most efficient way I found in order to send sub images forward.
+
+Stage C-
+BrightnessImgCharMatcher:
+TreeMap<Double, Character> brightnessCharMap - I chose to save all chars and values in TreeMap and use the
+fact that It's sorted. this way, I could easily find for a brightness value a char with closest brightness
+value at O(logN) (N=#chars) and O(N) at worst case.
+The search of closest value will use TreeMap functions.
+    createBrightnessCharMap -
+        normalizedByResolution - I calculate all brightness values of all chars in set.
+        while going over all chars I save the min&max values
+        normalized - I calculate normalized brightness values of all chars by min&max values and by formula
+        given.
+
+Stage D-
+HashMap<int[], Double> brightnessOfSubsMap - used for efficiency. If resolution is not changed, It keeps for
+every int[] coordinate of subImage its' brightness value. This way I do not calculate it again if resolution
+is the same.
+    convertSubPic - returns final brightness value of sub images. Works according to instructions.
+    closestValInMap - returns char with the closest brightness value to brightness value of sub image.
+    I find the closest char with lower value and closest char with higher value of val, and returns the one of
+     them closest in abs.
+    removeAllBrightness - when resolution changes the function is called, clearing brightnessOfSubsMap. this
+    way the program knows the last subImages should be changed to different size.
+
+Stage E-
+    chooseChars - after all above stages in function. Goes over all topLefts and replaces every subImage in
+    most appropriate char.
+
+
+
+
