@@ -1,0 +1,40 @@
+shirlevy
+316419423
+
+Whatever: randomly chooses non-taken row and column within board size
+Clever: tries to complete a row (both sides). If fails - acts like Whatever
+Genius: tries to complete a row, a column (both sides) and a cross. If fails - acts like Whatever
+
+All players has the same interface and so it's simple to let each of them play his turn his way.
+No one but Factory needs to deal with different players, and less possible bugs.
+
+
+Clever vs. Whatever: size=4, winStrike=3
+
+######### Results #########
+Player 1, clever won: 8576 rounds
+Player 2, whatever won: 1422 rounds
+Ties: 2
+
+
+Clever vs. Genius: size=4, winStrike=3
+
+######### Results #########
+Player 1, clever won: 4217 rounds
+Player 2, genius won: 5783 rounds
+Ties: 0
+
+
+Whatever vs. Whatever: size=4, winStrike=3
+######### Results #########
+Player 1, WHATEVER won: 5010 rounds
+Player 2, whatever won: 4983 rounds
+Ties: 7
+
+
+Genius vs. Whatever: size=4, winStrike=3
+
+######### Results #########
+Player 1, genius won: 9237 rounds
+Player 2, whatever won: 763 rounds
+Ties: 0
